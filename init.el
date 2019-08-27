@@ -21,9 +21,13 @@
 (unless (package-installed-p 'use-package)
 (package-refresh-contents)
 (package-install 'use-package))
-
-(setq-default indent-tabs-mode t)
-(setq-default tab-width 4)
+; 回车换行，自动添加 4 个字符
+;(setq c-basic-offset 4)
+(setq-default c-basic-offset 4
+              tab-width 4
+              indent-tabs-mode t)
+;(setq-default indent-tabs-mode t)
+;(setq-default tab-width 4)
 
 (require 'dashboard)
 (dashboard-setup-startup-hook)
