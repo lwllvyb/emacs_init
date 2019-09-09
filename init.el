@@ -3,12 +3,54 @@
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
 ;; You may delete these explanator
-(setq visible-bell 1)
+
+(defun async-rsync()
+  "async command."
+  (interactive)
+  (async-start
+   ;; 在子进程中要执行的lambda函数
+	(lambda ()
+	(shell-command-to-string "sh /vagrant/bin/rsync.sh"))
+
+	;;当子进程执行完成后要执行的回调，子进程执行的结果将作为回调函数的参数
+	(lambda (result)
+	(message "Async rsync process done"))))
+
+;; reload emacs configuration
+(defun reload-init-file ()
+  (interactive)
+  (load-file "~/.emacs.d/init.el"))
+
+(global-set-key (kbd "C-c r") 'reload-init-file) 
+
+;; ---------- basic -----------
+;; 全屏
 (toggle-frame-fullscreen)
+;; 行号
+(display-line-numbers-mode)
 (setq inhibit-startup-message t)
+
+;; 关闭 bell 声音; 状态栏显示
+(setq visible-bell nil
+      ring-bell-function 'flash-mode-line)
+(defun flash-mode-line ()
+  (invert-face 'mode-line)
+  (run-with-timer 0.1 nil #'invert-face 'mode-line))
+
+;; tool bar close
 (tool-bar-mode -1)
-(setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                         ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+;; yes-no to y-n
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(when (version<= "26.0.50" emacs-version )
+  (global-display-line-numbers-mode))
+(global-hl-line-mode 1)
+(set-face-background 'hl-line "#1c88ee")
+(save-place-mode 1) 
+;; ---------- end -----------
+
+(setq package-archives '(("melpa" . "https://mirrors.163.com/elpa/melpa/")
+						 ("melpa-stable" . "https://mirrors.163.com/elpa/melpa-stable/")))
 (package-initialize) ;; You might already have this line
 
 (require 'package)
@@ -21,6 +63,31 @@
 (unless (package-installed-p 'use-package)
 (package-refresh-contents)
 (package-install 'use-package))
+
+;; 统计 按键
+(require 'keyfreq)
+(keyfreq-mode 1)
+(keyfreq-autosave-mode 1)
+;; keyfreq-show 显示
+
+(setq multi-term-program "/bin/zsh")
+
+
+(require 'jumplist)
+(global-set-key (kbd "C-<") 'jumplist-previous)
+(global-set-key (kbd "C->") 'jumplist-next)
+
+(require 'highlight-parentheses)
+(define-globalized-minor-mode global-highlight-parentheses-mode highlight-parentheses-mode
+  (lambda nil (highlight-parentheses-mode t)))
+
+(global-highlight-parentheses-mode t)
+
+; 配色
+(use-package spacemacs-common
+    :ensure spacemacs-theme
+    :config (load-theme 'spacemacs-dark t))
+
 ; 回车换行，自动添加 4 个字符
 ;(setq c-basic-offset 4)
 (setq-default c-basic-offset 4
@@ -28,6 +95,13 @@
               indent-tabs-mode t)
 ;(setq-default indent-tabs-mode t)
 ;(setq-default tab-width 4)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;  ---------- key map ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-o") 'pop-global-mark)
+
 
 (require 'dashboard)
 (dashboard-setup-startup-hook)
@@ -69,6 +143,7 @@
 (global-set-key "\C-s" 'swiper)
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "<f6>") 'ivy-resume)
+
 (global-set-key (kbd "M-x") 'counsel-M-x)
 (global-set-key (kbd "C-x C-f") 'counsel-find-file)
 (global-set-key (kbd "<f1> f") 'counsel-describe-function)
@@ -105,12 +180,19 @@
 (evil-escape-mode 1)
 ;; }}
 
+;;
+(defun term-send-rsync()
+  "Move backward word in term mode."
+  (interactive)
+  (term-send-raw-string "sh /vagrant/bin/rsync.sh"))
+
 ;; {{ use `,` as leader key
 (general-create-definer my-comma-leader-def
   :prefix ","
   :states '(normal visual))
 
 (my-comma-leader-def
+  "gg" 'counsel-etags-grep
   "gr" 'helm-gtags-find-rtag
   "gd" 'helm-gtags-find-tag
   "gu" 'helm-gtags-update-tags
@@ -120,8 +202,12 @@
   "rr" 'counsel-recentf
   "dj" 'dired-jump ;; open the dired from current file
   "kb" 'kill-buffer-and-window ;; "k" is preserved to replace "C-g"
-  "xk" 'kill-buffer
+  "xk" 'kill-this-buffer
   "xm" 'counsel-M-x
+  "xz" 'multi-term-dedicated-toggle
+  "xr" ' term-send-rsync
+  "1"  'other-window
+  "tt" 'async-rsync
   )
 
 
@@ -149,7 +235,11 @@
 (define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
 (define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
 
-;(helm-projectile-on)
+
+(require 'autopair)
+(autopair-global-mode) ;; enable autopair in all buffers
+(add-hook 'c-mode-common-hook 
+          #'(lambda () (autopair-mode)))
 
 (use-package counsel-etags
   :ensure t
@@ -167,6 +257,7 @@
   (setq counsel-etags-update-interval 60)
   (add-to-list 'counsel-etags-ignore-directories "build"))
 
+
 (eval-after-load 'counsel-etags
   '(progn
      ;; counsel-etags-ignore-directories does NOT support wildcast
@@ -177,6 +268,32 @@
 
 (setq speedbar-show-unknown-files t)
 
+;; magit
+(setq magit-blame--style
+  '(margin
+	(margin-format " %C %a" " %H")))
+
+
+;; markdown-mode
+(use-package markdown-mode
+  :ensure t
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+
+;; company-go
+(require 'company)                                   ; load company mode
+(require 'company-go)                                ; load company mode go backend
+(setq company-tooltip-limit 20)                      ; bigger popup window
+(setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
+(setq company-echo-delay 0)                          ; remove annoying blinking
+(setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
+(add-hook 'go-mode-hook (lambda ()
+                          (set (make-local-variable 'company-backends) '(company-go))
+                          (company-mode)))
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -184,10 +301,11 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-	(fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
+	(markdown-mode jumplist highlight-symbol highlight-indent-guides format-all autopair highlight-parentheses highlight multi-term spacemacs-theme fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+ '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0))))
+ '(hl-line ((t (:background "RoyalBlue2")))))
