@@ -45,7 +45,7 @@
 (when (version<= "26.0.50" emacs-version )
   (global-display-line-numbers-mode))
 (global-hl-line-mode 1)
-(set-face-background 'hl-line "#1c88ee")
+(set-face-background 'hl-line "#FFF000")
 (save-place-mode 1) 
 ;; ---------- end -----------
 
@@ -101,8 +101,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "C-o") 'pop-global-mark)
-
-
+x
 (require 'dashboard)
 (dashboard-setup-startup-hook)
 ;; Or if you use use-package
@@ -159,14 +158,30 @@
 (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
 ))
 
+;; company
 (company-mode)
 (add-hook 'after-init-hook 'global-company-mode)
 (add-hook 'c++-mode-hook 'global-company-mode)
 (setq company-backends (delete 'company-semantic company-backends))
-(setq company-backends '((company-clang)))
+(setq company-backends '((company-clang
+						  company-c-headers
+						  company-files
+						  company-keywords
+						  company-yasnippet)))
 
 (add-to-list 'company-backends 'company-c-headers)
+;; company-go
+(require 'company)                                   ; load company mode
+(require 'company-go)                                ; load company mode go backend
+(setq company-tooltip-limit 20)                      ; bigger popup window
+(setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
+(setq company-echo-delay 0)                          ; remove annoying blinking
+(setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
+(add-hook 'go-mode-hook (lambda ()
+                          (set (make-local-variable 'company-backends) '(company-go))
+                          (company-mode)))
 
+;; vi mode
 (evil-mode 1)
 
 ;(local-require 'general)
@@ -275,6 +290,7 @@
 
 
 ;; markdown-mode
+
 (use-package markdown-mode
   :ensure t
   :mode (("README\\.md\\'" . gfm-mode)
@@ -282,16 +298,16 @@
          ("\\.markdown\\'" . markdown-mode))
   :init (setq markdown-command "multimarkdown"))
 
-;; company-go
-(require 'company)                                   ; load company mode
-(require 'company-go)                                ; load company mode go backend
-(setq company-tooltip-limit 20)                      ; bigger popup window
-(setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
-(setq company-echo-delay 0)                          ; remove annoying blinking
-(setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
-(add-hook 'go-mode-hook (lambda ()
-                          (set (make-local-variable 'company-backends) '(company-go))
-                          (company-mode)))
+
+;; org-mode
+(require 'org)
+(setq org-src-fontify-natively t)
+
+;; 设置默认 Org Agenda 文件目录
+(setq org-agenda-files '("/vagrant/resources/100-Work-工作资料库/110-工作计划"))
+
+;; 设置 org-agenda 打开快捷键
+(global-set-key (kbd "C-c a") 'org-agenda)
 
 
 (custom-set-variables
@@ -301,7 +317,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-	(markdown-mode jumplist highlight-symbol highlight-indent-guides format-all autopair highlight-parentheses highlight multi-term spacemacs-theme fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
+	(wgrep-helm markdown-mode jumplist highlight-symbol highlight-indent-guides format-all autopair highlight-parentheses highlight multi-term spacemacs-theme fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
