@@ -159,6 +159,7 @@ x
 ))
 
 ;; company
+(add-hook 'after-init-hook 'global-company-mode)
 (company-mode)
 (add-hook 'after-init-hook 'global-company-mode)
 (add-hook 'c++-mode-hook 'global-company-mode)
@@ -167,6 +168,7 @@ x
 						  company-c-headers
 						  company-files
 						  company-keywords
+						  company-elisp
 						  company-yasnippet)))
 
 (add-to-list 'company-backends 'company-c-headers)
