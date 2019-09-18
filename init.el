@@ -101,7 +101,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "C-o") 'pop-global-mark)
-x
 (require 'dashboard)
 (dashboard-setup-startup-hook)
 ;; Or if you use use-package
