@@ -9,19 +9,19 @@
   (interactive)
   (async-start
    ;; 在子进程中要执行的lambda函数
-	(lambda ()
-	(shell-command-to-string "sh /vagrant/bin/rsync.sh"))
+   (lambda ()
+	 (shell-command-to-string "sh /vagrant/bin/rsync.sh"))
 
-	;;当子进程执行完成后要执行的回调，子进程执行的结果将作为回调函数的参数
-	(lambda (result)
-	(message "Async rsync process done"))))
+   ;;当子进程执行完成后要执行的回调，子进程执行的结果将作为回调函数的参数
+   (lambda (result)
+	 (message "Async rsync process done"))))
 
 ;; reload emacs configuration
 (defun reload-init-file ()
   (interactive)
   (load-file "~/.emacs.d/init.el"))
 
-(global-set-key (kbd "C-c r") 'reload-init-file) 
+(global-set-key (kbd "C-c r") 'reload-init-file)
 
 ;; ---------- basic -----------
 ;; 全屏
@@ -41,17 +41,74 @@
 (tool-bar-mode -1)
 ;; yes-no to y-n
 (defalias 'yes-or-no-p 'y-or-n-p)
+;; close backup file.txt~
+(setq make-backup-files nil)
 
 (when (version<= "26.0.50" emacs-version )
   (global-display-line-numbers-mode))
 (global-hl-line-mode 1)
 (set-face-background 'hl-line "#FFF000")
-(save-place-mode 1) 
+(save-place-mode 1)
+
 ;; ---------- end -----------
 
-(setq package-archives '(("melpa" . "https://mirrors.163.com/elpa/melpa/")
-						 ("melpa-stable" . "https://mirrors.163.com/elpa/melpa-stable/")))
-(package-initialize) ;; You might already have this line
+
+;; --------- auto down ------
+
+(when (>= emacs-major-version 24)
+     (require 'package)
+     (package-initialize)
+     (setq package-archives '(("gnu"   . "http://mirrors.163.com/elpa/gnu/")
+		      ("melpa" . "http://mirrors.163.com/elpa/melpa/"))))
+
+;; 注意 elpa.emacs-china.org 是 Emacs China 中文社区在国内搭建的一个 ELPA 镜像
+
+ ;; cl - Common Lisp Extension
+ (require 'cl)
+
+ ;; Add Packages
+ (defvar my/packages '(
+		keyfreq
+		which-key
+		evil
+		evil-escape
+		general
+		autopair
+		magit
+		;; --- Auto-completion ---
+		company
+		company-go
+		;; --- Better Editor ---
+		helm-gtags
+		swiper
+		counsel
+		;; --- Major Mode ---
+		;; --- Minor Mode ---
+		exec-path-from-shell
+		;; --- Themes ---
+		monokai-theme
+		;; solarized-theme
+		) "Default packages")
+
+ (setq package-selected-packages my/packages)
+
+ (defun my/packages-installed-p ()
+     (loop for pkg in my/packages
+	   when (not (package-installed-p pkg)) do (return nil)
+	   finally (return t)))
+
+ (unless (my/packages-installed-p)
+     (message "%s" "Refreshing package database...")
+     (package-refresh-contents)
+     (dolist (pkg my/packages)
+       (when (not (package-installed-p pkg))
+	 (package-install pkg))))
+
+ ;; Find Executable Path on OS X
+ (when (memq window-system '(mac ns))
+   (exec-path-from-shell-initialize))
+
+;; ---------- end -----------
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -61,8 +118,8 @@
 
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
-(package-refresh-contents)
-(package-install 'use-package))
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;; 统计 按键
 (require 'keyfreq)
@@ -72,90 +129,65 @@
 
 (setq multi-term-program "/bin/zsh")
 
-
-(require 'jumplist)
-(global-set-key (kbd "C-<") 'jumplist-previous)
-(global-set-key (kbd "C->") 'jumplist-next)
-
-(require 'highlight-parentheses)
-(define-globalized-minor-mode global-highlight-parentheses-mode highlight-parentheses-mode
-  (lambda nil (highlight-parentheses-mode t)))
-
-(global-highlight-parentheses-mode t)
-
-; 配色
 (use-package spacemacs-common
-    :ensure spacemacs-theme
-    :config (load-theme 'spacemacs-dark t))
+  :ensure spacemacs-theme
+  :config (load-theme 'spacemacs-dark t))
 
-; 回车换行，自动添加 4 个字符
-;(setq c-basic-offset 4)
+										; 回车换行，自动添加 4 个字符
+										;(setq c-basic-offset 4)
 (setq-default c-basic-offset 4
               tab-width 4
               indent-tabs-mode t)
-;(setq-default indent-tabs-mode t)
-;(setq-default tab-width 4)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;  ---------- key map ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(global-set-key (kbd "C-o") 'pop-global-mark)
-(require 'dashboard)
-(dashboard-setup-startup-hook)
-;; Or if you use use-package
-(use-package dashboard
-  :ensure t
-  :config
-  (dashboard-setup-startup-hook))
+										;(setq-default indent-tabs-mode t)
+										;(setq-default tab-width 4)
 
 (use-package try
-:ensure t)
+  :ensure t)
 
 (use-package which-key
-:ensure t
-:config (which-key-mode))
+  :ensure t
+  :config (which-key-mode))
 
-; add this to init.el
+										; add this to init.el
 (use-package ace-window
-:ensure t
-:init
-(progn
-(global-set-key [remap other-window] 'ace-window)
-(custom-set-faces
-'(aw-leading-char-face
-((t (:inherit ace-jump-face-foreground :height 3.0)))))
-))
+  :ensure t
+  :init
+  (progn
+	(global-set-key [remap other-window] 'ace-window)
+	(custom-set-faces
+	 '(aw-leading-char-face
+	   ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+	))
 (winner-mode 1)
 ;; it looks like counsel is a requirement for swiper
 (use-package counsel
-:ensure t
-)
+  :ensure t
+  )
 
 (use-package swiper
-:ensure try
-:config
-(progn
-(ivy-mode 1)
-(setq ivy-use-virtual-buffers t)
-(global-set-key "\C-s" 'swiper)
-(global-set-key (kbd "C-c C-r") 'ivy-resume)
-(global-set-key (kbd "<f6>") 'ivy-resume)
+  :ensure try
+  :config
+  (progn
+	(ivy-mode 1)
+	(setq ivy-use-virtual-buffers t)
+	(global-set-key "\C-s" 'swiper)
+	(global-set-key (kbd "C-c C-r") 'ivy-resume)
+	(global-set-key (kbd "<f6>") 'ivy-resume)
 
-(global-set-key (kbd "M-x") 'counsel-M-x)
-(global-set-key (kbd "C-x C-f") 'counsel-find-file)
-(global-set-key (kbd "<f1> f") 'counsel-describe-function)
-(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-(global-set-key (kbd "<f1> l") 'counsel-load-library)
-(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
-(global-set-key (kbd "C-c g") 'counsel-git)
-(global-set-key (kbd "C-c j") 'counsel-git-grep)
-(global-set-key (kbd "C-c k") 'counsel-ag)
-(global-set-key (kbd "C-x l") 'counsel-locate)
-(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
-(define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
-))
+	(global-set-key (kbd "M-x") 'counsel-M-x)
+	(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+	(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+	(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+	(global-set-key (kbd "<f1> l") 'counsel-load-library)
+	(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+	(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+	(global-set-key (kbd "C-c g") 'counsel-git)
+	(global-set-key (kbd "C-c j") 'counsel-git-grep)
+	(global-set-key (kbd "C-c k") 'counsel-ag)
+	(global-set-key (kbd "C-x l") 'counsel-locate)
+	(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+	(define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+	))
 
 ;; company
 (add-hook 'after-init-hook 'global-company-mode)
@@ -182,10 +214,11 @@
                           (set (make-local-variable 'company-backends) '(company-go))
                           (company-mode)))
 
+
 ;; vi mode
 (evil-mode 1)
 
-;(local-require 'general)
+										;(local-require 'general)
 (general-evil-setup t)
 
 ;; {{ https://github.com/syl20bnr/evil-escape
@@ -254,7 +287,7 @@
 
 (require 'autopair)
 (autopair-global-mode) ;; enable autopair in all buffers
-(add-hook 'c-mode-common-hook 
+(add-hook 'c-mode-common-hook
           #'(lambda () (autopair-mode)))
 
 (use-package counsel-etags
@@ -266,9 +299,9 @@
   ;; Don't warn when TAGS files are large
   (setq large-file-warning-threshold nil)
   (add-hook 'prog-mode-hook
-        (lambda ()
-          (add-hook 'after-save-hook
-            'counsel-etags-virtual-update-tags 'append 'local)))
+			(lambda ()
+			  (add-hook 'after-save-hook
+						'counsel-etags-virtual-update-tags 'append 'local)))
   :config
   (setq counsel-etags-update-interval 60)
   (add-to-list 'counsel-etags-ignore-directories "build"))
@@ -286,8 +319,8 @@
 
 ;; magit
 (setq magit-blame--style
-  '(margin
-	(margin-format " %C %a" " %H")))
+	  '(margin
+		(margin-format " %C %a" " %H")))
 
 
 ;; markdown-mode
@@ -307,6 +340,11 @@
 ;; 设置默认 Org Agenda 文件目录
 (setq org-agenda-files '("/vagrant/resources/100-Work-工作资料库/110-工作计划"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;  ---------- key map ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-o") 'pop-global-mark)
 ;; 设置 org-agenda 打开快捷键
 (global-set-key (kbd "C-c a") 'org-agenda)
 
@@ -316,9 +354,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(org-agenda-files nil)
  '(package-selected-packages
    (quote
-	(wgrep-helm markdown-mode jumplist highlight-symbol highlight-indent-guides format-all autopair highlight-parentheses highlight multi-term spacemacs-theme fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
+	(company-lsp lsp-go wgrep-helm markdown-mode jumplist highlight-symbol highlight-indent-guides format-all autopair highlight-parentheses highlight multi-term spacemacs-theme fzf imenu-list eshell-fixed-prompt goto-last-change evil-escape magit helm-git dashboard-project-status dashboard find-file-in-project counsel-gtags general evil-leader evil-args geben-helm-projectile exec-path-from-shell helm company-go company-c-headers evil ggtags company swiper ace-window winum which-key use-package try))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
