@@ -75,6 +75,9 @@
 		general
 		autopair
 		magit
+		fzf
+		flycheck
+
 		;; --- Auto-completion ---
 		company
 		company-go
@@ -85,7 +88,7 @@
 		;; --- Major Mode ---
 		;; --- Minor Mode ---
 		exec-path-from-shell
-		;; --- Themes ---
+;; --- Themes ---
 		monokai-theme
 		;; solarized-theme
 		) "Default packages")
@@ -192,6 +195,7 @@
 ;; company
 (add-hook 'after-init-hook 'global-company-mode)
 (company-mode)
+(global-company-mode t)
 (add-hook 'after-init-hook 'global-company-mode)
 (add-hook 'c++-mode-hook 'global-company-mode)
 (setq company-backends (delete 'company-semantic company-backends))
@@ -199,26 +203,51 @@
 						  company-c-headers
 						  company-files
 						  company-keywords
+						  company-dabbrev-code
+						  company-gtags 
+						  company-etags
+						  company-dabbrev
 						  company-elisp
-						  company-yasnippet)))
+						  company-yasnippet
+						  company-go)))
 
-(add-to-list 'company-backends 'company-c-headers)
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "M-n") nil)
+  (define-key company-active-map (kbd "M-p") nil)
+  (define-key company-active-map (kbd "C-n") #'company-select-next)
+  (define-key company-active-map (kbd "C-p") #'company-select-previous))
+
 ;; company-go
 (require 'company)                                   ; load company mode
 (require 'company-go)                                ; load company mode go backend
+(setq company-minimum-prefix-length 2)
 (setq company-tooltip-limit 20)                      ; bigger popup window
-(setq company-idle-delay .3)                         ; decrease delay before autocompletion popup shows
+(setq company-idle-delay .2)                         ; decrease delay before autocompletion popup shows
 (setq company-echo-delay 0)                          ; remove annoying blinking
 (setq company-begin-commands '(self-insert-command)) ; start autocompletion only after typing
-(add-hook 'go-mode-hook (lambda ()
-                          (set (make-local-variable 'company-backends) '(company-go))
-                          (company-mode)))
 
+;; go-mode hook
+(setq gofmt-command "goimports")
+(add-hook 'go-mode-hook (lambda()
+						  (setenv "GOPATH" (concat ""
+							"/Users/liwenlong03/work/mebs"
+							"/Users/liwenlong03/work/mebs/src/metal/vendor"
+							))
+						  (add-hook 'before-save-hook 'gofmt-before-save)
+						  (local-set-key (kbd "C-d") 'godef-jump)))
+;; (add-hook 'go-mode-hook (lambda ()
+                          ;; (set (make-local-variable 'company-backends) '(company-go))
+                          ;; (company-mode)))
+
+;; flycheck
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
 
 ;; vi mode
 (evil-mode 1)
 
-										;(local-require 'general)
+;(local-require 'general)
 (general-evil-setup t)
 
 ;; {{ https://github.com/syl20bnr/evil-escape
@@ -246,7 +275,7 @@
   "gd" 'helm-gtags-find-tag
   "gu" 'helm-gtags-update-tags
   "aa" 'copy-to-x-clipboard ; used frequently
-  "ip" 'fzf-projectile
+  "ip" 'fzf-git-files
   "ii" 'counsel-imenu
   "rr" 'counsel-recentf
   "dj" 'dired-jump ;; open the dired from current file
@@ -261,28 +290,27 @@
 
 
 (setq
- helm-gtags-ignore-case t
- helm-gtags-auto-update t
- helm-gtags-use-input-at-cursor t
- helm-gtags-pulse-at-cursor t
- helm-gtags-prefix-key "\C-cg"
- helm-gtags-suggested-key-mapping t
- )
+	helm-gtags-ignore-case t
+	helm-gtags-auto-update t
+	helm-gtags-use-input-at-cursor t
+	helm-gtags-pulse-at-cursor t
+	helm-gtags-prefix-key "\C-cg"
+	helm-gtags-suggested-key-mapping t)
 
 (require 'helm-gtags)
-;; Enable helm-gtags-mode
-(add-hook 'dired-mode-hook 'helm-gtags-mode)
-(add-hook 'eshell-mode-hook 'helm-gtags-mode)
-(add-hook 'c-mode-hook 'helm-gtags-mode)
-(add-hook 'c++-mode-hook 'helm-gtags-mode)
-(add-hook 'asm-mode-hook 'helm-gtags-mode)
+	;; Enable helm-gtags-mode
+	(add-hook 'dired-mode-hook 'helm-gtags-mode)
+	(add-hook 'eshell-mode-hook 'helm-gtags-mode)
+	(add-hook 'c-mode-hook 'helm-gtags-mode)
+	(add-hook 'c++-mode-hook 'helm-gtags-mode)
+	(add-hook 'asm-mode-hook 'helm-gtags-mode)
 
-(define-key helm-gtags-mode-map (kbd "<leader> g a") 'helm-gtags-tags-in-this-function)
-(define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
-(define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
-(define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
-(define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
-(define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
+	(define-key helm-gtags-mode-map (kbd "<leader> g a") 'helm-gtags-tags-in-this-function)
+	(define-key helm-gtags-mode-map (kbd "C-j") 'helm-gtags-select)
+	(define-key helm-gtags-mode-map (kbd "M-.") 'helm-gtags-dwim)
+	(define-key helm-gtags-mode-map (kbd "M-,") 'helm-gtags-pop-stack)
+	(define-key helm-gtags-mode-map (kbd "C-c <") 'helm-gtags-previous-history)
+	(define-key helm-gtags-mode-map (kbd "C-c >") 'helm-gtags-next-history)
 
 
 (require 'autopair)
@@ -317,14 +345,7 @@
 
 (setq speedbar-show-unknown-files t)
 
-;; magit
-(setq magit-blame--style
-	  '(margin
-		(margin-format " %C %a" " %H")))
-
-
 ;; markdown-mode
-
 (use-package markdown-mode
   :ensure t
   :mode (("README\\.md\\'" . gfm-mode)
