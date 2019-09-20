@@ -10,7 +10,7 @@
   (async-start
    ;; 在子进程中要执行的lambda函数
    (lambda ()
-	 (shell-command-to-string "sh /vagrant/bin/rsync.sh"))
+	 (shell-command-to-string "sh /Users/liwenlong03/work/bin/rsync.sh"))
 
    ;;当子进程执行完成后要执行的回调，子进程执行的结果将作为回调函数的参数
    (lambda (result)
@@ -54,13 +54,16 @@
 
 
 ;; --------- auto down ------
-
+;; rsync -avz rsync://mirrors.tuna.tsinghua.edu.cn/elpa/ ~/work/emacs_plugins
+;; 
 (when (>= emacs-major-version 24)
-     (require 'package)
-     (package-initialize)
-     (setq package-archives '(("gnu"   . "http://mirrors.163.com/elpa/gnu/")
-		      ("melpa" . "http://mirrors.163.com/elpa/melpa/"))))
-
+	(require 'package)
+	(package-initialize)
+	(setq package-archives
+		'(("melpa-cn" . "/Users/liwenlong03/work/emacs_plugins/melpa/")
+			("org-cn"   . "/Users/liwenlong03/work/emacs_plugins/org/")
+			("gnu-cn"   . "/Users/liwenlong03/work/emacs_plugins/gnu/")
+			("marmalade-cn"   . "/Users/liwenlong03/work/emacs_plugins/marmalade/"))))
 ;; 注意 elpa.emacs-china.org 是 Emacs China 中文社区在国内搭建的一个 ELPA 镜像
 
  ;; cl - Common Lisp Extension
