@@ -1,11 +1,13 @@
+;;; package --- summary
+;;; Commentary:
 
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
 ;; You may delete these explanator
-
+;;; Code:
 (defun async-rsync()
-  "async command."
+  "Async command."
   (interactive)
   (async-start
    ;; 在子进程中要执行的lambda函数
@@ -18,6 +20,7 @@
 
 ;; reload emacs configuration
 (defun reload-init-file ()
+  "Reload init file."
   (interactive)
   (load-file "~/.emacs.d/init.el"))
 
@@ -34,6 +37,7 @@
 (setq visible-bell nil
       ring-bell-function 'flash-mode-line)
 (defun flash-mode-line ()
+  "Flash mode line."
   (invert-face 'mode-line)
   (run-with-timer 0.1 nil #'invert-face 'mode-line))
 
@@ -67,7 +71,7 @@
 ;; 注意 elpa.emacs-china.org 是 Emacs China 中文社区在国内搭建的一个 ELPA 镜像
 
  ;; cl - Common Lisp Extension
- (require 'cl)
+(eval-when-compile (require 'cl))
 
  ;; Add Packages
  (defvar my/packages '(
@@ -207,12 +211,14 @@
 						  company-files
 						  company-keywords
 						  company-dabbrev-code
-						  company-gtags 
+						  company-gtags
 						  company-etags
 						  company-dabbrev
 						  company-elisp
 						  company-yasnippet
 						  company-go)))
+
+(setq company-dabbrev-downcase nil)
 
 (with-eval-after-load 'company
   (define-key company-active-map (kbd "M-n") nil)
@@ -389,3 +395,9 @@
  ;; If there is more than one, they won't work right.
  '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0))))
  '(hl-line ((t (:background "RoyalBlue2")))))
+
+;; Local Variables:
+;; byte-compile-warnings: (not free-vars)
+;; End:
+(provide 'init)
+;;; init.el ends here
